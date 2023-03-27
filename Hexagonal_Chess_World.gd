@@ -16,6 +16,10 @@
 
 # Hopefully, this code will help you grasp what it is I am attempting to do.
 # Any help / pointers you can provide will be greatly appreciated.
+# this may be working now as far as taking the losing piece off of the board.
+
+# next I would like to add a text box to the right side of the game board where I
+# can report the battle info which is now getting printed to the console.
 
 
 
@@ -283,14 +287,16 @@ func cwl1(apiece, dpiece):
 	print("Defender: ", dpiece)
 	battlechance = randf()
 	print("Battlechance is: ",battlechance)
-	if battlechance > 0.75:
+	if battlechance <= 0.55:
 		print("Attack wins with battlechance = ", battlechance)
 		zattackwon = true
-		return apiece
+		# we return the piece to kill
+		return dpiece
 	else:
 		print("Defend wins with battlechance = ", battlechance)
 		zattackwon = false
-		return dpiece
+		# we return the piece to kill
+		return apiece
 	
 
 
@@ -305,7 +311,9 @@ func player_turn(clicked_cell, sync_mult = false):
 				warresult = cwl1(active_piece, piece)
 				print("War result winner: ", warresult)
 				$TileMap.kill_piece(warresult)
-				print("Just killed a piece - dR.")
+				print("Just killed a piece - dR. - ", warresult)
+				# zattackwon = active_piece == warresult
+				print("zattackwon in if is: ", zattackwon)
 				break
 				
 	elif 'Pawn' in active_piece.name and clicked_cell in $TileMap.jumped_over_tiles\
@@ -315,13 +323,16 @@ func player_turn(clicked_cell, sync_mult = false):
 		if get_tree().is_network_server():
 			var dead_npc_path = str($TileMap.jumped_over_tiles[clicked_cell].get_path())
 			rpc("sync_kill_piece", dead_npc_path)
-	print("Trying to erase: ", active_piece, " at: ", active_piece.tile_position)
-	$TileMap.chessmen_coords.erase(active_piece.tile_position)
+	#print("Trying to erase: ", active_piece, " at: ", active_piece.tile_position)
+	#$TileMap.chessmen_coords.erase(active_piece.tile_position)
 	print("zattackwon is: ", zattackwon)
 	if zattackwon:
+		print("Trying to erase: ", active_piece, " at: ", active_piece.tile_position)
+		$TileMap.chessmen_coords.erase(active_piece.tile_position)
 		active_piece.position = $TileMap.map_to_world(clicked_cell)
 		active_piece.tile_position = clicked_cell
 		$TileMap.chessmen_coords[clicked_cell] = active_piece
+		zattackwon = true
 	else:
 		print("What should we do if defence won?")
 		# at the end, set zattackwon to true
